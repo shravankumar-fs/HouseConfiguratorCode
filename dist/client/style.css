@@ -1,0 +1,91 @@
+@import url('https://fonts.googleapis.com/css2?family=Orbitron&display=swap');
+body {
+    margin: 0;
+    overflow: hidden;
+}
+* {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 12px;
+    letter-spacing: 1px;
+}
+.info {
+    color: yellow;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 20px 40px;
+    border-radius: 20px;
+    position: absolute;
+    font-size: 12px;
+    bottom: 0px;
+    left: 50%;
+    transform: translate(-50%);
+    width: fit-content;
+    text-align: center;
+}
+.modal {
+    position: absolute;
+    bottom: 100px;
+    left: 0;
+    z-index: 1;
+    display: flex;
+    justify-content: left;
+    gap: 10px;
+    flex-direction: column;
+    background-color: hsla(207, 44%, 49%, 0.4);
+    padding: 20px;
+    border-radius: 0 30px 30px 0;
+    box-shadow: 0px 5px hsla(207, 44%, 49%, 0.8);
+}
+
+.modal h2 {
+    color: white;
+    text-shadow: 0px 1px blue;
+    font-size: 20px;
+    letter-spacing: 1px;
+    font-weight: 600;
+}
+.modal .imgs {
+    display: flex;
+    justify-content: space-evenly;
+    gap: 5px;
+}
+.modal .imgs img {
+    height: 60px;
+    width: 60px;
+    border: gray 1px solid;
+    border-radius: 10px;
+    cursor: pointer;
+}
+.modal .imgs img.active {
+    height: 60px;
+    width: 60px;
+    border: midnightblue 2px groove;
+    border-width: 0 0 4px 0;
+    border-radius: 10px;
+}
+.modal .buttons {
+    display: flex;
+    justify-content: space-evenly;
+}
+.modal button {
+    border: 0;
+    height: fit-content;
+    width: fit-content;
+    padding: 5px;
+    cursor: pointer;
+    border-radius: 10px;
+}
+
+.choose {
+    color: white;
+    background-color: steelblue;
+}
+.choose:hover {
+    background-color: hsl(207, 44%, 29%);
+}
+.cancel {
+    color: white;
+    background-color: gray;
+}
+button:active {
+    transform: scale(0.98);
+}
