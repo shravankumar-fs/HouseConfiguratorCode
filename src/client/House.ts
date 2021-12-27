@@ -1,243 +1,248 @@
-import { group } from 'console'
-import { text } from 'express'
-import * as THREE from 'three'
-import { TextureLoader } from 'three'
+import * as THREE from "three";
+import { TextureLoader } from "three";
+import { WallBorder } from "./WallBorder";
 
 export class House {
-    house: THREE.Group
-    constructor(private scene: THREE.Scene) {
-        this.house = new THREE.Group()
-        this.initGround()
-        this.initHouse()
-        this.scene.add(this.house)
-    }
+  house: THREE.Group;
+  walls: THREE.Mesh<THREE.BoxGeometry, THREE.MeshToonMaterial>[] = [];
+  wallBorders: WallBorder[] = [];
+  constructor(private scene: THREE.Scene) {
+    this.house = new THREE.Group();
+    this.initGround();
+    this.initHouse();
+    this.scene.add(this.house);
+  }
 
-    getHouse() {
-        return this.house
-    }
+  getHouse() {
+    return this.house;
+  }
 
-    initGround() {
-        let texture = new TextureLoader().load('models/grass.jpg')
-        texture.wrapS = THREE.RepeatWrapping
-        texture.wrapT = THREE.RepeatWrapping
-        texture.repeat.set(500, 500)
-        let mat = new THREE.MeshToonMaterial({
-            map: texture,
-            side: THREE.DoubleSide,
-        })
-        let geo = new THREE.PlaneBufferGeometry(10000, 10000)
-        let item = new THREE.Mesh(geo, mat)
-        item.rotation.x += Math.PI / 2
-        item.position.set(0, -35, 0)
-        item.receiveShadow = true
-        this.house.add(item)
+  initGround() {
+    let texture = new TextureLoader().load("models/grass.jpg");
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.wrapT = THREE.RepeatWrapping;
+    texture.repeat.set(500, 500);
+    let mat = new THREE.MeshToonMaterial({
+      map: texture,
+      side: THREE.DoubleSide,
+    });
+    let geo = new THREE.PlaneBufferGeometry(10000, 10000);
+    let item = new THREE.Mesh(geo, mat);
+    item.rotation.x += Math.PI / 2;
+    item.position.set(0, -35, 0);
+    item.receiveShadow = true;
+    this.house.add(item);
 
-        let surT = new TextureLoader().load('models/sky.jpg')
-        let m = new THREE.MeshToonMaterial({
-            map: surT,
-            side: THREE.DoubleSide,
-        })
-        let g = new THREE.SphereGeometry(600, 100, 100)
-        let i = new THREE.Mesh(g, m)
-        i.position.set(0, 104, 0)
-        this.house.add(i)
-    }
+    let surT = new TextureLoader().load("models/sky.jpg");
+    let m = new THREE.MeshToonMaterial({
+      map: surT,
+      side: THREE.DoubleSide,
+    });
+    let g = new THREE.SphereGeometry(5000, 1000, 1000);
+    let i = new THREE.Mesh(g, m);
+    i.position.set(0, 104, 0);
+    this.house.add(i);
+  }
 
-    initHouse() {
-        this.initCeiling()
-        this.initFloor()
-        this.initWalls()
-    }
+  initHouse() {
+    this.initCeiling();
+    this.initFloor();
+    this.initWalls();
+  }
 
-    initFloor() {
-        let mat = new THREE.MeshToonMaterial({
-            map: new TextureLoader().load('models/wood1.jpg'),
-            depthTest: true,
-            depthWrite: true,
-            side: THREE.DoubleSide,
-        })
-        let geo = new THREE.BoxGeometry(100, 1, 100)
-        let item = new THREE.Mesh(geo, mat)
-        item.position.set(0, -30.6, 0)
-        item.receiveShadow = true
-        item.name = 'Floor1'
-        this.house.add(item)
+  initFloor() {
+    let mat = new THREE.MeshToonMaterial({
+      map: new TextureLoader().load("models/wood1.jpg"),
+      depthTest: true,
+      depthWrite: true,
+      side: THREE.DoubleSide,
+    });
+    let geo = new THREE.BoxGeometry(100, 1, 100);
+    let item = new THREE.Mesh(geo, mat);
+    item.position.set(0, -30.6, 0);
+    item.receiveShadow = true;
+    item.name = "Floor1";
+    this.house.add(item);
 
-        let mat0 = new THREE.MeshToonMaterial({
-            map: new TextureLoader().load('models/sand.jpg'),
-            color: 0xefef00,
-            side: THREE.DoubleSide,
-            transparent: true,
-            opacity: 0.2,
-            depthTest: true,
-            depthWrite: true,
-        })
-        let geo0 = new THREE.BoxGeometry(200, 0.5, 200)
-        let item0 = new THREE.Mesh(geo0, mat0)
-        item0.position.set(0, -30.991, 40)
-        item0.receiveShadow = true
-        item0.name = 'Floor'
-        this.house.add(item0)
+    let mat0 = new THREE.MeshToonMaterial({
+      map: new TextureLoader().load("models/sand.jpg"),
+      color: 0xefef00,
+      side: THREE.DoubleSide,
+      transparent: true,
+      opacity: 0.2,
+      depthTest: true,
+      depthWrite: true,
+    });
+    let geo0 = new THREE.BoxGeometry(200, 0.5, 200);
+    let item0 = new THREE.Mesh(geo0, mat0);
+    item0.position.set(0, -30.991, 40);
+    item0.receiveShadow = true;
+    item0.name = "Floor";
+    this.house.add(item0);
 
-        let mat2 = new THREE.MeshToonMaterial({
-            map: new TextureLoader().load('models/wood1.jpg'),
-            side: THREE.DoubleSide,
-            depthTest: true,
-            depthWrite: true,
-        })
-        let geo2 = new THREE.BoxGeometry(60, 1, 60)
-        let item2 = new THREE.Mesh(geo2, mat2)
-        item2.position.set(0, -30.6, 80)
-        item2.receiveShadow = true
-        item2.name = 'Floor2'
-        this.house.add(item2)
-        this.addGrass(new THREE.Vector3(-100, -40, 140))
-        this.addGrass(new THREE.Vector3(100, -40, 140))
-        this.addGrass(new THREE.Vector3(-100, -40, -60))
-        this.addGrass(new THREE.Vector3(100, -40, -60))
+    let mat2 = new THREE.MeshToonMaterial({
+      map: new TextureLoader().load("models/wood1.jpg"),
+      side: THREE.DoubleSide,
+      depthTest: true,
+      depthWrite: true,
+    });
+    let geo2 = new THREE.BoxGeometry(60, 1, 60);
+    let item2 = new THREE.Mesh(geo2, mat2);
+    item2.position.set(0, -30.6, 80);
+    item2.receiveShadow = true;
+    item2.name = "Floor2";
+    this.house.add(item2);
+    this.addGrass(new THREE.Vector3(-100, -40, 140));
+    this.addGrass(new THREE.Vector3(100, -40, 140));
+    this.addGrass(new THREE.Vector3(-100, -40, -60));
+    this.addGrass(new THREE.Vector3(100, -40, -60));
 
-        this.addGateWall(new THREE.Vector3(-100, -15, 42))
-        this.addGateWall(new THREE.Vector3(100, -15, 42))
-        this.addGateWall(new THREE.Vector3(0, -15, -58), Math.PI / 2)
-    }
-    addGateWall(pos: THREE.Vector3, yRot?: number) {
-        let text = new TextureLoader().load('models/wood.jpg')
-        text.wrapS = THREE.RepeatWrapping
-        text.wrapT = THREE.RepeatWrapping
-        text.repeat.set(5, 1)
-        let m = new THREE.MeshToonMaterial({
-            // color: 0x00efef,
-            map: text,
-            // transparent: true,
-            // opacity: 0.1,
-            side: THREE.DoubleSide,
-            depthTest: true,
-            depthWrite: true,
-        })
-        let g = new THREE.BoxGeometry(2, 30, 198)
-        let i = new THREE.Mesh(g, m)
-        i.receiveShadow = true
-        i.castShadow = true
-        this.house.add(i)
-        if (yRot) i.rotation.y += Math.PI / 2
-        i.position.set(pos.x, pos.y, pos.z)
-    }
-    initCeiling() {
-        let texture = new TextureLoader().load('models/roof.jpg')
-        texture.wrapS = THREE.RepeatWrapping
-        texture.wrapT = THREE.RepeatWrapping
-        texture.repeat.set(100, 100)
-        let mat = new THREE.MeshToonMaterial({
-            map: texture,
-            color: 0x937313,
-            side: THREE.DoubleSide,
-            depthTest: true,
-            depthWrite: true,
-        })
-        let geo = new THREE.ConeGeometry(100, 40, 4, 1, true)
-        let roof = new THREE.Mesh(geo, mat)
-        roof.position.set(0, 45, 0)
-        roof.rotation.y += Math.PI / 4
-        roof.castShadow = true
-        this.house.add(roof)
-    }
-    initWalls() {
-        this.house.add(this.getWallItem(new THREE.Vector3(-50, 0, 0), 0))
-        this.house.add(this.getWallItem(new THREE.Vector3(50, 0, 0), 0))
-        this.house.add(this.getWallItem(new THREE.Vector3(0, 0, -50), Math.PI / 2))
-        this.house.add(this.getWallItem(new THREE.Vector3(0, 0, 50), Math.PI / 2))
-        this.house.add(this.getDoor())
-        this.house.add(this.getWindow(new THREE.Vector3(-50, 0, 0)))
-        this.house.add(this.getWindow(new THREE.Vector3(50, 0, 0)))
+    this.addGateWall(new THREE.Vector3(-100, -15, 42));
+    this.addGateWall(new THREE.Vector3(100, -15, 42));
+    this.addGateWall(new THREE.Vector3(0, -15, -58), Math.PI / 2);
+  }
+  addGateWall(pos: THREE.Vector3, yRot?: number) {
+    let text = new TextureLoader().load("models/wood.jpg");
+    text.wrapS = THREE.RepeatWrapping;
+    text.wrapT = THREE.RepeatWrapping;
+    text.repeat.set(5, 1);
+    let m = new THREE.MeshToonMaterial({
+      // color: 0x00efef,
+      map: text,
+      // transparent: true,
+      // opacity: 0.1,
+      side: THREE.DoubleSide,
+      depthTest: true,
+      depthWrite: true,
+    });
+    let g = new THREE.BoxGeometry(2, 30, 198);
+    let i = new THREE.Mesh(g, m);
+    i.receiveShadow = true;
+    i.castShadow = true;
+    this.house.add(i);
+    if (yRot) i.rotation.y += Math.PI / 2;
+    i.position.set(pos.x, pos.y, pos.z);
+  }
+  initCeiling() {
+    let texture = new TextureLoader().load("models/roof.jpg");
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.wrapT = THREE.RepeatWrapping;
+    texture.repeat.set(100, 100);
+    let mat = new THREE.MeshToonMaterial({
+      map: texture,
+      color: 0x937313,
+      side: THREE.DoubleSide,
+      depthTest: true,
+      depthWrite: true,
+    });
+    let geo = new THREE.ConeGeometry(100, 40, 4, 1, true);
+    let roof = new THREE.Mesh(geo, mat);
+    roof.position.set(0, 45, 0);
+    roof.rotation.y += Math.PI / 4;
+    roof.castShadow = true;
+    this.house.add(roof);
+  }
+  initWalls() {
+    this.house.add(this.getWallItem(new THREE.Vector3(-50, 0, 0), 1, 60, 100));
+    this.house.add(this.getWallItem(new THREE.Vector3(50, 0, 0), 1, 60, 100));
+    this.house.add(this.getWallItem(new THREE.Vector3(0, 0, -50), 100, 60, 1));
+    this.house.add(this.getWallItem(new THREE.Vector3(0, 0, 50), 100, 60, 1));
 
-        let mat0 = new THREE.MeshBasicMaterial({
-            color: 0x937373,
-        })
+    // this.house.add(this.getDoor());
+    // this.house.add(this.getWindow(new THREE.Vector3(-50, 0, 0)));
+    // this.house.add(this.getWindow(new THREE.Vector3(50, 0, 0)));
 
-        let geo0 = new THREE.BoxGeometry(31, 21, 0.8)
-        let window0 = new THREE.Mesh(geo0, mat0)
-        window0.position.set(0, 0, -49.3)
-        this.house.add(window0)
+    // let mat0 = new THREE.MeshBasicMaterial({
+    //   color: 0x937373,
+    // });
 
-        let mat = new THREE.MeshBasicMaterial({
-            map: new THREE.TextureLoader().load('models/paint.jpg'),
-        })
+    // let geo0 = new THREE.BoxGeometry(31, 21, 0.8);
+    // let window0 = new THREE.Mesh(geo0, mat0);
+    // window0.position.set(0, 0, -49.3);
+    // this.house.add(window0);
 
-        let geo = new THREE.BoxGeometry(30, 20, 1)
-        let window = new THREE.Mesh(geo, mat)
-        window.position.set(0, 0, -49)
-        this.house.add(window)
-    }
-    getWindow(pos: THREE.Vector3) {
-        let mat = new THREE.MeshBasicMaterial({
-            color: 0x3f3f3f,
-            map: new THREE.TextureLoader().load('models/window.jpg'),
-        })
+    // let mat = new THREE.MeshBasicMaterial({
+    //   map: new THREE.TextureLoader().load("models/paint.jpg"),
+    // });
 
-        let geo = new THREE.BoxGeometry(2, 15, 30)
+    // let geo = new THREE.BoxGeometry(30, 20, 1);
+    // let window = new THREE.Mesh(geo, mat);
+    // window.position.set(0, 0, -49);
+    // this.house.add(window);
+  }
+  getWindow(pos: THREE.Vector3) {
+    let mat = new THREE.MeshBasicMaterial({
+      color: 0x3f3f3f,
+      map: new THREE.TextureLoader().load("models/window.jpg"),
+    });
 
-        let window = new THREE.Mesh(geo, mat)
-        window.position.set(pos.x, pos.y, pos.z)
-        window.castShadow = true
-        return window
-    }
-    getDoor() {
-        let texture = new TextureLoader().load('models/door.jpg')
-        // texture.wrapS = THREE.RepeatWrapping
-        // texture.wrapT = THREE.RepeatWrapping
-        // texture.repeat.set(10, 10)
-        let mat = new THREE.MeshToonMaterial({
-            map: texture,
-            color: 0x937313,
-            side: THREE.DoubleSide,
-            depthTest: true,
-            depthWrite: true,
-        })
+    let geo = new THREE.BoxGeometry(2, 15, 30);
 
-        let geo = new THREE.BoxGeometry(30, 40, 2)
+    let window = new THREE.Mesh(geo, mat);
+    window.position.set(pos.x, pos.y, pos.z);
+    window.castShadow = true;
+    return window;
+  }
+  getDoor() {
+    let texture = new TextureLoader().load("models/door.jpg");
+    // texture.wrapS = THREE.RepeatWrapping
+    // texture.wrapT = THREE.RepeatWrapping
+    // texture.repeat.set(10, 10)
+    let mat = new THREE.MeshToonMaterial({
+      map: texture,
+      color: 0x937313,
+      side: THREE.DoubleSide,
+      depthTest: true,
+      depthWrite: true,
+    });
 
-        let door = new THREE.Mesh(geo, mat)
-        door.position.set(0, -10, 50)
-        door.castShadow = true
-        return door
-    }
+    let geo = new THREE.BoxGeometry(30, 40, 2);
 
-    getWallItem(pos: THREE.Vector3, yRot: number, height?: number, width?: number) {
-        let texture = new TextureLoader().load('models/wall1.jpg')
-        // texture.wrapS = THREE.RepeatWrapping
-        // texture.wrapT = THREE.RepeatWrapping
-        // texture.repeat.set(2, 2)
-        let mat = new THREE.MeshToonMaterial({
-            map: texture,
-            side: THREE.DoubleSide,
-            depthTest: true,
-            depthWrite: true,
-        })
+    let door = new THREE.Mesh(geo, mat);
+    door.position.set(0, -10, 50);
+    door.castShadow = true;
+    return door;
+  }
 
-        let geo = new THREE.BoxGeometry(1, 60, 100)
-        if (height && width) {
-            geo = new THREE.BoxGeometry(1, height, width)
-        }
-        let wall = new THREE.Mesh(geo, mat)
-        wall.rotation.y += yRot
-        wall.name = 'wall'
-        wall.position.set(pos.x, pos.y, pos.z)
-        wall.castShadow = true
-        wall.receiveShadow = true
-        return wall
-    }
+  getWallItem(
+    pos: THREE.Vector3,
+    width: number,
+    height: number,
+    depth: number
+  ) {
+    let texture = new TextureLoader().load("models/wall1.jpg");
+    // texture.wrapS = THREE.RepeatWrapping
+    // texture.wrapT = THREE.RepeatWrapping
+    // texture.repeat.set(2, 2)
+    let mat = new THREE.MeshToonMaterial({
+      map: texture,
+      side: THREE.DoubleSide,
+      depthTest: true,
+      depthWrite: true,
+    });
 
-    addGrass(pos: THREE.Vector3) {
-        const geometry = new THREE.TorusKnotGeometry(10, 3, 64, 8, 17, 2)
-        const material = new THREE.MeshToonMaterial({
-            color: 0x2fef00,
-            map: new THREE.TextureLoader().load('models/grass.jpg'),
-        })
-        const torusKnot = new THREE.Mesh(geometry, material)
-        torusKnot.castShadow = true
-        torusKnot.position.set(pos.x, pos.y, pos.z)
-        torusKnot.castShadow = true
-        torusKnot.receiveShadow = true
-        this.house.add(torusKnot)
-    }
+    let geo = new THREE.BoxGeometry(width, height, depth);
+    let wall = new THREE.Mesh(geo, mat);
+    wall.name = "wall";
+    wall.position.set(pos.x, pos.y, pos.z);
+    wall.castShadow = true;
+    wall.receiveShadow = true;
+    this.walls.push(wall);
+    this.wallBorders.push(new WallBorder(wall));
+    return wall;
+  }
+
+  addGrass(pos: THREE.Vector3) {
+    const geometry = new THREE.TorusKnotGeometry(10, 3, 64, 8, 17, 2);
+    const material = new THREE.MeshToonMaterial({
+      color: 0x2fef00,
+      map: new THREE.TextureLoader().load("models/grass.jpg"),
+    });
+    const torusKnot = new THREE.Mesh(geometry, material);
+    torusKnot.castShadow = true;
+    torusKnot.position.set(pos.x, pos.y, pos.z);
+    torusKnot.castShadow = true;
+    torusKnot.receiveShadow = true;
+    this.house.add(torusKnot);
+  }
 }
