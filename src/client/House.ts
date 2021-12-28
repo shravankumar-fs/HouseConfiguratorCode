@@ -187,14 +187,14 @@ export class House {
     this.addGateWall(new THREE.Vector3(0, 40, -100), 0, 200, 20, 1, true);
     this.addGateWall(new THREE.Vector3(0, 40, 100), 0, 200, 20, 1, true);
 
-    let g = new THREE.BoxGeometry(30, 40, 2.5);
-    let m = new THREE.MeshToonMaterial({
-      map: new THREE.TextureLoader().load("models/door3.jpg"),
-    });
-    let door = new THREE.Mesh(g, m);
-    door.position.set(0, -10, 75);
-    door.name = "door";
-    this.house.add(door);
+    // let g = new THREE.BoxGeometry(30, 40, 2.5);
+    // let m = new THREE.MeshToonMaterial({
+    //   map: new THREE.TextureLoader().load("models/door3.jpg"),
+    // });
+    // let door = new THREE.Mesh(g, m);
+    // door.position.set(0, -10, 75);
+    // door.name = "door";
+    // this.house.add(door);
   }
   getWindow(pos: THREE.Vector3) {
     let mat = new THREE.MeshBasicMaterial({

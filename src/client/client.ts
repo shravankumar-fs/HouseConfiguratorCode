@@ -1,12 +1,11 @@
 import * as THREE from "three";
-import { Event, MeshToonMaterial } from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 
 import { DragControls } from "three/examples/jsm/controls/DragControls";
 import { House } from "./House";
 import { WallBorder } from "./WallBorder";
 import { CSG } from "./CSGMesh";
-import * as e from "express";
+import { log } from "console";
 
 const scene = new THREE.Scene();
 scene.background = new THREE.TextureLoader().load("models/sky.jpg");
@@ -18,7 +17,6 @@ const camera = new THREE.PerspectiveCamera(
 );
 camera.position.set(0, 50, 200);
 // camera.position.set(0, 10, 60);
-let selectedMapped: THREE.Mesh<THREE.BoxGeometry, THREE.MeshToonMaterial>;
 let light = new THREE.PointLight(0xffffff, 1, 1000);
 light.position.set(0, 150, 200);
 
@@ -60,66 +58,49 @@ controls.enableDamping = false;
 controls.dampingFactor = 0.01;
 controls.enablePan = false;
 controls.screenSpacePanning = false;
+let listWindows: THREE.Mesh<THREE.BoxGeometry, THREE.MeshToonMaterial>[] = [];
 
+let c = 0;
 function animate() {
   requestAnimationFrame(animate);
-
-  if (selectedMapped) {
-    let wbs = new WallBorder(selectedMapped);
-    house.walls.forEach((wall, idx) => {
-      if (house.wallBorders[idx].wallContainsObject(wbs)) {
-        if (SUBFINAL) {
-          house.getHouse().remove(SUBFINAL);
-          SUBFINAL.visible = false;
-          SUBFINAL = undefined as any as THREE.Mesh<
-            THREE.BoxGeometry,
-            THREE.MeshToonMaterial
-          >;
-        }
-        // let vec1 = wall.position.clone();
-        // let vec2 = selectedMapped.position.clone();
-        // wall.position.set(0, 0, 0);
-        // selectedMapped.position.set(0, 0, 0);
-
-        const geometry = selectedMapped.geometry.clone();
-        const material = selectedMapped.material.clone();
-        const cube = new THREE.Mesh(geometry, material);
-        cube.position.set(
-          selectedMapped.position.x,
-          selectedMapped.position.y,
-          selectedMapped.position.z
-        );
-        cube.name = "window";
-        house.getHouse().add(cube);
-
+  let count = 0;
+  house.walls.forEach((wall, idx) => {
+    let SUBFINAL: THREE.Mesh<THREE.BoxGeometry, THREE.MeshToonMaterial> =
+      undefined as any as THREE.Mesh<THREE.BoxGeometry, THREE.MeshToonMaterial>;
+    let wb = house.wallBorders[idx];
+    let changed = false;
+    listWindows.forEach((windowElmt) => {
+      let wbs = new WallBorder(windowElmt);
+      if (wb.wallContainsObject(wbs)) {
         const MESH1CSG = CSG.fromGeometry(wall.geometry.clone());
-        const MESH2CSG = CSG.fromMesh(cube);
+        const MESH2CSG = CSG.fromGeometry(windowElmt.geometry);
         const SUBSCTRACTCSG = MESH1CSG.subtract(MESH2CSG);
-
         SUBFINAL = CSG.toMesh(SUBSCTRACTCSG, new THREE.Matrix4()) as THREE.Mesh<
           THREE.BoxGeometry,
           THREE.MeshToonMaterial
         >;
-        // wall.position.set(vec1.x, vec1.y, vec1.z);
-        // selectedMapped.position.set(vec2.x, vec2.y, vec2.z);
         SUBFINAL.name = "wall";
         SUBFINAL.material = wall.material;
-        house.getHouse().add(SUBFINAL);
-
         SUBFINAL.position.set(
           wall.position.x,
           wall.position.y,
           wall.position.z
         );
-        draggable = [selectedMapped, cube];
-        selectedMapped.visible = true;
-        house.getHouse().remove(cube);
         SUBFINAL.visible = true;
         wall.visible = false;
+        changed = true;
+        let vec = wall.position.clone();
+        windowElmt.position.set(vec.x, vec.y, vec.z);
+        console.log("1");
       }
     });
-    camera.lookAt(selectedMapped.position);
-  }
+    if (changed) {
+      house.getHouse().add(SUBFINAL);
+    } else {
+      house.getHouse().remove(SUBFINAL);
+      wall.visible = true;
+    }
+  });
 
   controls.update();
 
@@ -137,7 +118,7 @@ let walls = ["models/wall1.jpg", "models/wall2.jpg", "models/wall3.jpg"];
 let doors = ["models/door1.jpg", "models/door2.jpg", "models/door3.jpg"];
 let wins = ["models/window1.jpg", "models/window2.jpg", "models/window3.jpg"];
 const raycaster = new THREE.Raycaster();
-function changeColor(event: Event) {
+function changeColor(event: THREE.Event) {
   event.preventDefault();
   const mouse = {
     x: (event.clientX / renderer.domElement.clientWidth) * 2 - 1,
@@ -151,18 +132,18 @@ function changeColor(event: Event) {
   if (intersects.length > 0) {
     let item = intersects[0];
     if (item.object.name == "Floor2" || item.object.name == "Floor1") {
-      colorPopUp(item, floors);
+      modifyFloorAndWall(item, floors);
     } else if (item.object.name == "wall") {
-      colorPopUp(item, walls, true);
+      modifyFloorAndWall(item, walls, true);
     } else if (item.object.name == "door") {
-      rotateAndColorPop(item, doors);
+      modifyWindowAndDoor(item, doors);
     } else if (item.object.name == "window") {
-      rotateAndColorPop(item, wins);
+      modifyWindowAndDoor(item, wins);
     }
   }
 }
-let listWindows: THREE.Mesh<THREE.BoxGeometry, THREE.MeshToonMaterial>[] = [];
-function colorPopUp(
+
+function modifyFloorAndWall(
   item: THREE.Intersection,
   textures: string[],
   wall?: boolean
@@ -211,7 +192,7 @@ function colorPopUp(
   choose?.addEventListener("click", () => {
     let imgString = (selected as HTMLImageElement).attributes[0]
       .nodeValue as string;
-    ((item.object as THREE.Mesh).material as MeshToonMaterial).map =
+    ((item.object as THREE.Mesh).material as THREE.MeshToonMaterial).map =
       new THREE.TextureLoader().load(imgString);
     modal.remove();
     selected = undefined;
@@ -259,11 +240,11 @@ function colorPopUp(
         let imgString = (doorSelected as HTMLImageElement).attributes[0]
           .nodeValue as string;
         let g = new THREE.BoxGeometry(30, 40, 2.5);
-        let m = new MeshToonMaterial({
+        let m = new THREE.MeshToonMaterial({
           map: new THREE.TextureLoader().load(imgString),
         });
         let door = new THREE.Mesh(g, m);
-
+        draggable.push(door);
         door.name = "door";
         house.getHouse().add(door);
         modal.remove();
@@ -315,18 +296,18 @@ function colorPopUp(
       if (windowSelected) {
         let imgString = (windowSelected as HTMLImageElement).attributes[0]
           .nodeValue as string;
-        let g = new THREE.BoxGeometry(30, 20, 4.5);
-        let m = new MeshToonMaterial({
+        let g = new THREE.BoxGeometry(70, 50, 4.5);
+        let m = new THREE.MeshToonMaterial({
           map: new THREE.TextureLoader().load(imgString),
           transparent: true,
-          opacity: 0.5,
+          opacity: 0.3,
         });
         let window = new THREE.Mesh(g, m);
         window.name = "window";
         window.position.set(0, 0, 0);
         house.getHouse().add(window);
         listWindows.push(window);
-        manageWindow();
+        draggable.push(window);
         modal.remove();
         windowSelected = undefined;
       }
@@ -337,7 +318,7 @@ function colorPopUp(
   });
 }
 
-const dControls = new DragControls(draggable, camera, renderer.domElement);
+let dControls = new DragControls(draggable, camera, renderer.domElement);
 dControls.addEventListener("dragstart", function (event) {
   controls.enabled = false;
 });
@@ -346,7 +327,7 @@ dControls.addEventListener("dragend", function (event) {
   controls.enabled = true;
 });
 
-function rotateAndColorPop(item: THREE.Intersection, materials: string[]) {
+function modifyWindowAndDoor(item: THREE.Intersection, materials: string[]) {
   if (document.getElementById("modal")) {
     document.getElementById("modal")?.remove();
   }
@@ -393,25 +374,42 @@ function rotateAndColorPop(item: THREE.Intersection, materials: string[]) {
   let fix = document.querySelector(".fix");
   let del = document.querySelector(".delete");
   rotate?.addEventListener("click", () => {
-    (item.object as THREE.Mesh).rotation.y += Math.PI / 2;
+    if (item.object.name == "window") {
+      let ob = listWindows.filter((win) => win.id === item.object.id)[0];
+      let g: THREE.BoxGeometry;
+      if (ob.geometry.parameters.width < ob.geometry.parameters.depth) {
+        g = new THREE.BoxGeometry(70, 50, 4);
+      } else {
+        g = new THREE.BoxGeometry(4, 50, 70);
+      }
+      let m = ob.material.clone();
+      let vec = ob.position.clone();
+
+      listWindows.splice(listWindows.indexOf(ob), 1);
+      house.getHouse().remove(ob);
+      draggable.splice(listWindows.indexOf(ob), 1);
+
+      let mat = new THREE.Mesh(g, m);
+      mat.name = "window";
+      mat.position.set(vec.x, vec.y, vec.z);
+
+      house.getHouse().add(mat);
+      listWindows.push(mat);
+      draggable.push(mat);
+      dControls.activate();
+    } else {
+      item.object.rotation.y += Math.PI / 2;
+    }
   });
   drag?.addEventListener("click", () => {
-    if (item.object.name == "window") {
-      selectedMapped = listWindows.filter(
-        (win) => win.id === item.object.id
-      )[0];
-    }
-    draggable.length = 0;
-    draggable.push(
-      item.object as THREE.Mesh<THREE.BoxGeometry, THREE.MeshToonMaterial>
-    );
+    dControls.activate();
   });
   fix?.addEventListener("click", () => {
-    draggable.pop();
+    dControls.deactivate();
     modal.remove();
   });
   del?.addEventListener("click", () => {
-    draggable.pop();
+    dControls.deactivate();
     if (item.object.name == "window") {
       let ob = listWindows.filter((win) => win.id === item.object.id)[0];
       listWindows.splice(listWindows.indexOf(ob), 1);
@@ -426,19 +424,18 @@ function rotateAndColorPop(item: THREE.Intersection, materials: string[]) {
   choose?.addEventListener("click", () => {
     let imgString = (selected as HTMLImageElement).attributes[0]
       .nodeValue as string;
-    ((item.object as THREE.Mesh).material as MeshToonMaterial).map =
+    ((item.object as THREE.Mesh).material as THREE.MeshToonMaterial).map =
       new THREE.TextureLoader().load(imgString);
     modal.remove();
-    draggable.pop();
+    dControls.deactivate();
     selected = undefined;
   });
   cancel?.addEventListener("click", () => {
     modal.remove();
-    draggable.pop();
+    dControls.deactivate();
   });
 }
 
-let SUBFINAL: THREE.Mesh<THREE.BoxGeometry, THREE.MeshToonMaterial>;
 let count = 0;
 
 function manageWindow() {}
