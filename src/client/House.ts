@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { TextureLoader } from "three";
+import { MeshToonMaterial, TextureLoader } from "three";
 import { WallBorder } from "./WallBorder";
 
 export class House {
@@ -26,7 +26,7 @@ export class House {
       map: texture,
       side: THREE.DoubleSide,
     });
-    let geo = new THREE.PlaneBufferGeometry(10000, 10000);
+    let geo = new THREE.PlaneGeometry(10000, 10000);
     let item = new THREE.Mesh(geo, mat);
     item.rotation.x += Math.PI / 2;
     item.position.set(0, -35, 0);
@@ -57,12 +57,26 @@ export class House {
       depthWrite: true,
       side: THREE.DoubleSide,
     });
-    let geo = new THREE.BoxGeometry(100, 1, 100);
+    let geo = new THREE.BoxGeometry(150, 1, 150);
     let item = new THREE.Mesh(geo, mat);
     item.position.set(0, -30.6, 0);
     item.receiveShadow = true;
     item.name = "Floor1";
     this.house.add(item);
+    let mat1 = new THREE.MeshToonMaterial({
+      map: new TextureLoader().load("models/wood1.jpg"),
+      depthTest: true,
+      depthWrite: true,
+      side: THREE.DoubleSide,
+    });
+    let geo1 = new THREE.PlaneGeometry(200, 200);
+    let item1 = new THREE.Mesh(geo1, mat1);
+    item1.position.set(0, 30.6, 0);
+    item1.rotation.x -= Math.PI / 2;
+    item1.name = "Floor1";
+    item1.castShadow = true;
+    item1.receiveShadow = true;
+    this.house.add(item1);
 
     let mat0 = new THREE.MeshToonMaterial({
       map: new TextureLoader().load("models/sand.jpg"),
@@ -73,7 +87,7 @@ export class House {
       depthTest: true,
       depthWrite: true,
     });
-    let geo0 = new THREE.BoxGeometry(200, 0.5, 200);
+    let geo0 = new THREE.BoxGeometry(400, 0.5, 400);
     let item0 = new THREE.Mesh(geo0, mat0);
     item0.position.set(0, -30.991, 40);
     item0.receiveShadow = true;
@@ -86,36 +100,51 @@ export class House {
       depthTest: true,
       depthWrite: true,
     });
-    let geo2 = new THREE.BoxGeometry(60, 1, 60);
+    let geo2 = new THREE.BoxGeometry(150, 1, 100);
     let item2 = new THREE.Mesh(geo2, mat2);
-    item2.position.set(0, -30.6, 80);
+    item2.position.set(0, -30.6, 125);
     item2.receiveShadow = true;
     item2.name = "Floor2";
     this.house.add(item2);
-    this.addGrass(new THREE.Vector3(-100, -40, 140));
-    this.addGrass(new THREE.Vector3(100, -40, 140));
-    this.addGrass(new THREE.Vector3(-100, -40, -60));
-    this.addGrass(new THREE.Vector3(100, -40, -60));
+    this.addGrass(new THREE.Vector3(-200, -40, 240));
+    this.addGrass(new THREE.Vector3(200, -40, 240));
+    this.addGrass(new THREE.Vector3(-200, -40, -160));
+    this.addGrass(new THREE.Vector3(200, -40, -160));
 
-    this.addGateWall(new THREE.Vector3(-100, -15, 42));
-    this.addGateWall(new THREE.Vector3(100, -15, 42));
-    this.addGateWall(new THREE.Vector3(0, -15, -58), Math.PI / 2);
+    for (let i = 0; i < 5; i++) {
+      this.addGrass(new THREE.Vector3(80 + i, -40 + i * 2, 175 - i * 20));
+      this.addGrass(new THREE.Vector3(-80 - i, -40 + i * 2, 175 - i * 20));
+    }
+
+    this.addGateWall(new THREE.Vector3(-200, -15, 42));
+    this.addGateWall(new THREE.Vector3(200, -15, 42));
+    this.addGateWall(new THREE.Vector3(0, -15, -158), Math.PI / 2);
   }
-  addGateWall(pos: THREE.Vector3, yRot?: number) {
+  addGateWall(
+    pos: THREE.Vector3,
+    yRot?: number,
+    w?: number,
+    h?: number,
+    d?: number,
+    transparent?: boolean
+  ) {
     let text = new TextureLoader().load("models/wood.jpg");
     text.wrapS = THREE.RepeatWrapping;
     text.wrapT = THREE.RepeatWrapping;
     text.repeat.set(5, 1);
     let m = new THREE.MeshToonMaterial({
-      // color: 0x00efef,
-      map: text,
-      // transparent: true,
-      // opacity: 0.1,
+      color: transparent ? 0x00efef : undefined,
+      map: !transparent ? text : undefined,
+      transparent: transparent,
+      opacity: transparent ? 0.1 : 1,
       side: THREE.DoubleSide,
       depthTest: true,
       depthWrite: true,
     });
-    let g = new THREE.BoxGeometry(2, 30, 198);
+    let g = new THREE.BoxGeometry(4, 30, 400);
+    if (w && h && d) {
+      g = new THREE.BoxGeometry(w, h, d);
+    }
     let i = new THREE.Mesh(g, m);
     i.receiveShadow = true;
     i.castShadow = true;
@@ -135,40 +164,37 @@ export class House {
       depthTest: true,
       depthWrite: true,
     });
-    let geo = new THREE.ConeGeometry(100, 40, 4, 1, true);
+    let geo = new THREE.ConeGeometry(120, 70, 4, 1, true);
     let roof = new THREE.Mesh(geo, mat);
-    roof.position.set(0, 45, 0);
+    roof.position.set(0, 120, 0);
     roof.rotation.y += Math.PI / 4;
     roof.castShadow = true;
     this.house.add(roof);
   }
   initWalls() {
-    this.house.add(this.getWallItem(new THREE.Vector3(-50, 0, 0), 1, 60, 100));
-    this.house.add(this.getWallItem(new THREE.Vector3(50, 0, 0), 1, 60, 100));
-    this.house.add(this.getWallItem(new THREE.Vector3(0, 0, -50), 100, 60, 1));
-    this.house.add(this.getWallItem(new THREE.Vector3(0, 0, 50), 100, 60, 1));
+    this.house.add(this.getWallItem(new THREE.Vector3(-75, 0, 0), 1, 60, 150));
+    this.house.add(this.getWallItem(new THREE.Vector3(75, 0, 0), 1, 60, 150));
+    this.house.add(this.getWallItem(new THREE.Vector3(0, 0, -75), 150, 60, 1));
+    this.house.add(this.getWallItem(new THREE.Vector3(0, 0, 75), 150, 60, 1));
 
-    // this.house.add(this.getDoor());
-    // this.house.add(this.getWindow(new THREE.Vector3(-50, 0, 0)));
-    // this.house.add(this.getWindow(new THREE.Vector3(50, 0, 0)));
+    this.house.add(this.getWallItem(new THREE.Vector3(-75, 60, 0), 1, 60, 150));
+    this.house.add(this.getWallItem(new THREE.Vector3(75, 60, 0), 1, 60, 150));
+    this.house.add(this.getWallItem(new THREE.Vector3(0, 60, -75), 150, 60, 1));
+    this.house.add(this.getWallItem(new THREE.Vector3(0, 60, 75), 150, 60, 1));
 
-    // let mat0 = new THREE.MeshBasicMaterial({
-    //   color: 0x937373,
+    this.addGateWall(new THREE.Vector3(-100, 40, 0), 0, 1, 20, 200, true);
+    this.addGateWall(new THREE.Vector3(100, 40, 0), 0, 1, 20, 200, true);
+    this.addGateWall(new THREE.Vector3(0, 40, -100), 0, 200, 20, 1, true);
+    this.addGateWall(new THREE.Vector3(0, 40, 100), 0, 200, 20, 1, true);
+
+    // let g = new THREE.BoxGeometry(30, 40, 2.5);
+    // let m = new THREE.MeshToonMaterial({
+    //   map: new THREE.TextureLoader().load("models/door3.jpg"),
     // });
-
-    // let geo0 = new THREE.BoxGeometry(31, 21, 0.8);
-    // let window0 = new THREE.Mesh(geo0, mat0);
-    // window0.position.set(0, 0, -49.3);
-    // this.house.add(window0);
-
-    // let mat = new THREE.MeshBasicMaterial({
-    //   map: new THREE.TextureLoader().load("models/paint.jpg"),
-    // });
-
-    // let geo = new THREE.BoxGeometry(30, 20, 1);
-    // let window = new THREE.Mesh(geo, mat);
-    // window.position.set(0, 0, -49);
-    // this.house.add(window);
+    // let door = new THREE.Mesh(g, m);
+    // door.position.set(0, -10, 75);
+    // door.name = "door";
+    // this.house.add(door);
   }
   getWindow(pos: THREE.Vector3) {
     let mat = new THREE.MeshBasicMaterial({

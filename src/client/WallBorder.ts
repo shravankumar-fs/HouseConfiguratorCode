@@ -20,19 +20,35 @@ export class WallBorder {
   }
 
   public wallContainsObject(another: WallBorder): boolean {
-    return (
-      (another.xMin > this.xMin &&
-        another.xMax < this.xMax &&
-        another.yMin > this.yMin &&
-        another.yMax < this.yMax &&
-        another.vec.z > this.zMin &&
-        another.vec.z < this.zMax) ||
-      (another.zMin > this.xMin &&
-        another.zMax < this.xMax &&
-        another.yMin > this.yMin &&
-        another.yMax < this.yMax &&
-        another.vec.x > this.zMin &&
-        another.vec.x < this.zMax)
-    );
+    let w1 = another.xMax - another.xMin;
+    let h1 = another.yMax - another.yMin;
+    let d1 = another.zMax - another.zMin;
+
+    let w2 = this.xMax - this.xMin;
+    let h2 = this.yMax - this.yMin;
+    let d2 = this.zMax - this.zMin;
+
+    let left =
+      another.xMin > this.xMin &&
+      another.xMax < this.xMax &&
+      another.yMin > this.yMin &&
+      another.yMax < this.yMax &&
+      another.zMin < this.zMin &&
+      another.zMax > this.zMax;
+    let right =
+      another.xMin < this.xMin &&
+      another.xMax > this.xMax &&
+      another.yMin > this.yMin &&
+      another.yMax < this.yMax &&
+      another.zMin > this.zMin &&
+      another.zMax < this.zMax;
+
+    if (w1 > d1) {
+      return left;
+    }
+    if (w1 < d1) {
+      return right;
+    }
+    return false;
   }
 }
