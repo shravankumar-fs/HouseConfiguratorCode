@@ -6,6 +6,7 @@ import { DragControls } from "three/examples/jsm/controls/DragControls";
 import { House } from "./House";
 import { WallBorder } from "./WallBorder";
 import { CSG } from "./CSGMesh";
+import * as e from "express";
 
 const scene = new THREE.Scene();
 scene.background = new THREE.TextureLoader().load("models/sky.jpg");
@@ -276,7 +277,10 @@ function colorPopUp(
 
   addWinow?.addEventListener("click", (event) => {
     modal.remove();
-
+    let el = document.createElement("div");
+    el.innerHTML = "Go inside home to find added element";
+    document.querySelector(".info")?.appendChild(el);
+    setTimeout(() => el.remove(), 5000);
     modal = document.createElement("div");
     modal.classList.add("modal");
     modal.id = "modal";
@@ -319,7 +323,7 @@ function colorPopUp(
         });
         let window = new THREE.Mesh(g, m);
         window.name = "window";
-        window.position.set(0, 0, 75);
+        window.position.set(0, 0, 0);
         house.getHouse().add(window);
         listWindows.push(window);
         manageWindow();
@@ -438,3 +442,11 @@ let SUBFINAL: THREE.Mesh<THREE.BoxGeometry, THREE.MeshToonMaterial>;
 let count = 0;
 
 function manageWindow() {}
+document.body.addEventListener("keydown", (e) => {
+  if (e.key == "ArrowUp") {
+    controls.target.set(0, 60, 0);
+  } else if (e.key == "ArrowDown") {
+    controls.target.set(0, 0, 0);
+  }
+  camera.lookAt(controls.target);
+});
