@@ -25,14 +25,14 @@ export class WallBorder {
         another.xMax < this.xMax &&
         another.yMin > this.yMin &&
         another.yMax < this.yMax &&
-        another.vec.z > this.zMin &&
-        another.vec.z < this.zMax) ||
+        another.zMin < this.zMin &&
+        another.zMax > this.zMax) ||
       (another.zMin > this.xMin &&
         another.zMax < this.xMax &&
         another.yMin > this.yMin &&
         another.yMax < this.yMax &&
-        another.vec.x > this.zMin &&
-        another.vec.x < this.zMax)
+        another.xMin < this.xMin &&
+        another.xMax > this.xMax)
     );
   }
 }

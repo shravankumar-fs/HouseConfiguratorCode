@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { Event, MeshBasicMaterial, MeshToonMaterial } from "three";
+import { Event, MeshToonMaterial } from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 
 import { DragControls } from "three/examples/jsm/controls/DragControls";
@@ -16,21 +16,23 @@ const camera = new THREE.PerspectiveCamera(
   1000
 );
 camera.position.set(0, 50, 200);
+// camera.position.set(0, 10, 60);
 let selectedMapped: THREE.Mesh<THREE.BoxGeometry, THREE.MeshToonMaterial>;
 let light = new THREE.PointLight(0xffffff, 1, 1000);
-light.position.set(0, 80, 200);
+light.position.set(0, 150, 200);
 
 light.castShadow = true;
 scene.add(light);
-light.shadow.bias = -0.001;
-light.shadow.mapSize.width = 512;
-light.shadow.mapSize.height = 512;
+light.shadow.bias = -0.003;
+light.shadow.mapSize.width = 1024;
+light.shadow.mapSize.height = 1024;
 light.shadow.camera.near = 0.1;
-light.shadow.camera.far = 1000;
+light.shadow.camera.far = 500;
 
-let light2 = new THREE.PointLight(0xffffcf, 2, 100);
-light2.position.y = 0;
+let light2 = new THREE.PointLight(0xffffcf, 2, 150);
+light2.position.set(0, 0, 0);
 scene.add(light2);
+// scene.add(new THREE.PointLightHelper(light));
 
 const renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
@@ -61,7 +63,63 @@ controls.screenSpacePanning = false;
 function animate() {
   requestAnimationFrame(animate);
 
-  //   manageWindow();
+  if (selectedMapped) {
+    let wbs = new WallBorder(selectedMapped);
+    house.walls.forEach((wall, idx) => {
+      if (house.wallBorders[idx].wallContainsObject(wbs)) {
+        if (SUBFINAL) {
+          house.getHouse().remove(SUBFINAL);
+          SUBFINAL.visible = false;
+          SUBFINAL = undefined as any as THREE.Mesh<
+            THREE.BoxGeometry,
+            THREE.MeshToonMaterial
+          >;
+        }
+        // let vec1 = wall.position.clone();
+        // let vec2 = selectedMapped.position.clone();
+        // wall.position.set(0, 0, 0);
+        // selectedMapped.position.set(0, 0, 0);
+
+        const geometry = selectedMapped.geometry.clone();
+        const material = selectedMapped.material.clone();
+        const cube = new THREE.Mesh(geometry, material);
+        cube.position.set(
+          selectedMapped.position.x,
+          selectedMapped.position.y,
+          selectedMapped.position.z
+        );
+        cube.name = "window";
+        house.getHouse().add(cube);
+
+        const MESH1CSG = CSG.fromGeometry(wall.geometry.clone());
+        const MESH2CSG = CSG.fromMesh(cube);
+        const SUBSCTRACTCSG = MESH1CSG.subtract(MESH2CSG);
+
+        SUBFINAL = CSG.toMesh(SUBSCTRACTCSG, new THREE.Matrix4()) as THREE.Mesh<
+          THREE.BoxGeometry,
+          THREE.MeshToonMaterial
+        >;
+        // wall.position.set(vec1.x, vec1.y, vec1.z);
+        // selectedMapped.position.set(vec2.x, vec2.y, vec2.z);
+        SUBFINAL.name = "wall";
+        SUBFINAL.material = wall.material;
+        house.getHouse().add(SUBFINAL);
+
+        SUBFINAL.position.set(
+          wall.position.x,
+          wall.position.y,
+          wall.position.z
+        );
+        draggable = [selectedMapped, cube];
+        selectedMapped.visible = true;
+        house.getHouse().remove(cube);
+        SUBFINAL.visible = true;
+        wall.visible = false;
+      }
+    });
+    camera.lookAt(selectedMapped.position);
+  }
+
   controls.update();
 
   render();
@@ -200,7 +258,7 @@ function colorPopUp(
         let imgString = (doorSelected as HTMLImageElement).attributes[0]
           .nodeValue as string;
         let g = new THREE.BoxGeometry(30, 40, 2.5);
-        let m = new MeshBasicMaterial({
+        let m = new MeshToonMaterial({
           map: new THREE.TextureLoader().load(imgString),
         });
         let door = new THREE.Mesh(g, m);
@@ -253,17 +311,18 @@ function colorPopUp(
       if (windowSelected) {
         let imgString = (windowSelected as HTMLImageElement).attributes[0]
           .nodeValue as string;
-        let g = new THREE.BoxGeometry(30, 20, 2.5);
+        let g = new THREE.BoxGeometry(30, 20, 4.5);
         let m = new MeshToonMaterial({
           map: new THREE.TextureLoader().load(imgString),
           transparent: true,
-          opacity: 0.9,
+          opacity: 0.5,
         });
         let window = new THREE.Mesh(g, m);
-        listWindows.push(window);
         window.name = "window";
-        window.position.set(0, 0, 50);
+        window.position.set(0, 0, 75);
         house.getHouse().add(window);
+        listWindows.push(window);
+        manageWindow();
         modal.remove();
         windowSelected = undefined;
       }
@@ -278,6 +337,7 @@ const dControls = new DragControls(draggable, camera, renderer.domElement);
 dControls.addEventListener("dragstart", function (event) {
   controls.enabled = false;
 });
+dControls.addEventListener("drag", function (event) {});
 dControls.addEventListener("dragend", function (event) {
   controls.enabled = true;
 });
@@ -348,6 +408,10 @@ function rotateAndColorPop(item: THREE.Intersection, materials: string[]) {
   });
   del?.addEventListener("click", () => {
     draggable.pop();
+    if (item.object.name == "window") {
+      let ob = listWindows.filter((win) => win.id === item.object.id)[0];
+      listWindows.splice(listWindows.indexOf(ob), 1);
+    }
     (item.object as THREE.Mesh).removeFromParent();
     modal.remove();
   });
@@ -369,52 +433,8 @@ function rotateAndColorPop(item: THREE.Intersection, materials: string[]) {
     draggable.pop();
   });
 }
-setTimeout(() => {
-  console.log(house.wallBorders);
-}, 1000);
+
 let SUBFINAL: THREE.Mesh<THREE.BoxGeometry, THREE.MeshToonMaterial>;
 let count = 0;
 
-function manageWindow() {
-  if (selectedMapped) {
-    let wbs = new WallBorder(selectedMapped);
-    house.walls.forEach((wall, idx) => {
-      if (house.wallBorders[idx].wallContainsObject(wbs)) {
-        if (SUBFINAL) {
-          house.getHouse().remove(SUBFINAL);
-          SUBFINAL.visible = false;
-          SUBFINAL = wall;
-          console.log("1");
-        }
-        // const geometry = selectedMapped.geometry;
-        // const material = selectedMapped.material;
-        // const cube = new THREE.Mesh(geometry, material);
-        // cube.position.set(
-        //   selectedMapped.position.x,
-        //   selectedMapped.position.y,
-        //   selectedMapped.position.z
-        // );
-        // house.getHouse().add(cube);
-
-        const MESH1CSG = CSG.fromGeometry(wall.geometry.clone());
-        const MESH2CSG = CSG.fromMesh(selectedMapped);
-        const SUBSCTRACTCSG = MESH1CSG.subtract(MESH2CSG);
-        SUBFINAL = CSG.toMesh(SUBSCTRACTCSG, new THREE.Matrix4()) as THREE.Mesh<
-          THREE.BoxGeometry,
-          THREE.MeshToonMaterial
-        >;
-        SUBFINAL.name = "wall";
-        SUBFINAL.material = wall.material;
-        house.getHouse().add(SUBFINAL);
-        SUBFINAL.position.set(
-          wall.position.x,
-          wall.position.y,
-          wall.position.z
-        );
-        // house.getHouse().remove(cube);
-        SUBFINAL.visible = true;
-        wall.visible = false;
-      }
-    });
-  }
-}
+function manageWindow() {}
