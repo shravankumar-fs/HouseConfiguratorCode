@@ -28,25 +28,27 @@ export class WallBorder {
     let h2 = this.yMax - this.yMin;
     let d2 = this.zMax - this.zMin;
 
-    return (
-      (another.xMin > this.xMin &&
-        another.xMax < this.xMax &&
-        another.yMin > this.yMin &&
-        another.yMax < this.yMax &&
-        another.zMin < this.zMin &&
-        another.zMax > this.zMax &&
-        w2 > w1 &&
-        h2 > h1 &&
-        d2 < d1) ||
-      (another.zMin > this.zMin &&
-        another.zMax < this.zMax &&
-        another.yMin > this.yMin &&
-        another.yMax < this.yMax &&
-        another.xMin < this.xMin &&
-        another.xMax > this.xMax &&
-        w2 < w1 &&
-        h2 > h1 &&
-        d2 > d1)
-    );
+    let left =
+      another.xMin > this.xMin &&
+      another.xMax < this.xMax &&
+      another.yMin > this.yMin &&
+      another.yMax < this.yMax &&
+      another.zMin < this.zMin &&
+      another.zMax > this.zMax;
+    let right =
+      another.xMin < this.xMin &&
+      another.xMax > this.xMax &&
+      another.yMin > this.yMin &&
+      another.yMax < this.yMax &&
+      another.zMin > this.zMin &&
+      another.zMax < this.zMax;
+
+    if (w1 > d1) {
+      return left;
+    }
+    if (w1 < d1) {
+      return right;
+    }
+    return false;
   }
 }

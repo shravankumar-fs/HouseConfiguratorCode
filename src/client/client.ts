@@ -5,7 +5,6 @@ import { DragControls } from "three/examples/jsm/controls/DragControls";
 import { House } from "./House";
 import { WallBorder } from "./WallBorder";
 import { CSG } from "./CSGMesh";
-import { log } from "console";
 
 const scene = new THREE.Scene();
 scene.background = new THREE.TextureLoader().load("models/sky.jpg");
@@ -63,7 +62,6 @@ let listWindows: THREE.Mesh<THREE.BoxGeometry, THREE.MeshToonMaterial>[] = [];
 let c = 0;
 function animate() {
   requestAnimationFrame(animate);
-  let count = 0;
   house.walls.forEach((wall, idx) => {
     let SUBFINAL: THREE.Mesh<THREE.BoxGeometry, THREE.MeshToonMaterial> =
       undefined as any as THREE.Mesh<THREE.BoxGeometry, THREE.MeshToonMaterial>;
@@ -91,7 +89,6 @@ function animate() {
         changed = true;
         let vec = wall.position.clone();
         windowElmt.position.set(vec.x, vec.y, vec.z);
-        console.log("1");
       }
     });
     if (changed) {
@@ -436,9 +433,6 @@ function modifyWindowAndDoor(item: THREE.Intersection, materials: string[]) {
   });
 }
 
-let count = 0;
-
-function manageWindow() {}
 document.body.addEventListener("keydown", (e) => {
   if (e.key == "ArrowUp") {
     controls.target.set(0, 60, 0);
