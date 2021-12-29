@@ -6,6 +6,12 @@ import { House } from "./House";
 import { WallBorder } from "./WallBorder";
 import { CSG } from "./CSGMesh";
 
+const prev = `
+Click on wall/floor to change textures
+<br />
+Press Arrow up/down to go to first/second floor
+`;
+const scrollMsg = `Scroll inside home to see added element`;
 const scene = new THREE.Scene();
 scene.background = new THREE.TextureLoader().load("models/sky.jpg");
 const camera = new THREE.PerspectiveCamera(
@@ -57,7 +63,7 @@ controls.enablePan = false;
 controls.screenSpacePanning = false;
 let listWindows: THREE.Mesh<THREE.BoxGeometry, THREE.MeshToonMaterial>[] = [];
 let doorList: THREE.Mesh<THREE.BoxGeometry, THREE.MeshToonMaterial>[] = [];
-let count = 0;
+
 function animate() {
   requestAnimationFrame(animate);
   house.walls.forEach((wall, idx) => {
@@ -249,7 +255,13 @@ function modifyFloorAndWall(
           map: new THREE.TextureLoader().load(imgString),
         });
         let door = new THREE.Mesh(g, m);
-
+        let text = document.querySelector(".info");
+        if (text != null) {
+          text.innerHTML = scrollMsg;
+          setTimeout(() => {
+            if (text != null) text.innerHTML = prev;
+          }, 5000);
+        }
         door.position.set(
           controls.target.x,
           controls.target.y,
@@ -257,6 +269,7 @@ function modifyFloorAndWall(
         );
 
         draggable.push(door);
+        dControls.activate();
         door.name = "door";
         house.getHouse().add(door);
         doorList.push(door);
@@ -271,10 +284,6 @@ function modifyFloorAndWall(
 
   addWinow?.addEventListener("click", (event) => {
     modal.remove();
-    let el = document.createElement("div");
-    el.innerHTML = "Go inside home to find added element";
-    document.querySelector(".info")?.appendChild(el);
-    setTimeout(() => el.remove(), 5000);
     modal = document.createElement("div");
     modal.classList.add("modal");
     modal.id = "modal";
@@ -315,16 +324,24 @@ function modifyFloorAndWall(
           transparent: true,
           opacity: 0.3,
         });
-        let window = new THREE.Mesh(g, m);
-        window.name = "window";
-        window.position.set(
+        let winElement = new THREE.Mesh(g, m);
+        let text = document.querySelector(".info");
+        if (text != null) {
+          text.innerHTML = scrollMsg;
+          setTimeout(() => {
+            if (text != null) text.innerHTML = prev;
+          }, 5000);
+        }
+        winElement.name = "window";
+        winElement.position.set(
           controls.target.x,
           controls.target.y,
           controls.target.z
         );
-        house.getHouse().add(window);
-        listWindows.push(window);
-        draggable.push(window);
+        house.getHouse().add(winElement);
+        listWindows.push(winElement);
+        draggable.push(winElement);
+        dControls.activate();
         modal.remove();
         windowSelected = undefined;
       }
@@ -392,54 +409,11 @@ function modifyWindowAndDoor(item: THREE.Intersection, materials: string[]) {
   let del = document.querySelector(".delete");
   rotate?.addEventListener("click", () => {
     if (item.object.name == "window") {
-      let ob = listWindows.filter((win) => win.id === item.object.id)[0];
-      let g: THREE.BoxGeometry;
-      if (ob.geometry.parameters.width < ob.geometry.parameters.depth) {
-        g = new THREE.BoxGeometry(70, 50, 4);
-      } else {
-        g = new THREE.BoxGeometry(4, 50, 70);
-      }
-      let m = ob.material.clone();
-      let vec = ob.position.clone();
-
-      listWindows.splice(listWindows.indexOf(ob), 1);
-      house.getHouse().remove(ob);
-      draggable.splice(listWindows.indexOf(ob), 1);
-
-      let mat = new THREE.Mesh(g, m);
-      mat.name = "window";
-      mat.position.set(vec.x, vec.y, vec.z);
-
-      house.getHouse().add(mat);
-      listWindows.push(mat);
-      draggable.push(mat);
-      dControls.activate();
-      modal.remove();
+      rotateHouseElement(item, "window", listWindows);
     } else {
-      let ob = doorList.filter((door) => door.id === item.object.id)[0];
-      let g: THREE.BoxGeometry;
-      if (ob.geometry.parameters.width < ob.geometry.parameters.depth) {
-        g = new THREE.BoxGeometry(30, 40, 2.5);
-      } else {
-        g = new THREE.BoxGeometry(2.5, 40, 30);
-      }
-      let m = ob.material.clone();
-      let vec = ob.position.clone();
-
-      draggable.splice(doorList.indexOf(ob), 1);
-      doorList.splice(doorList.indexOf(ob), 1);
-      house.getHouse().remove(ob);
-
-      let mat = new THREE.Mesh(g, m);
-      mat.name = "door";
-      mat.position.set(vec.x, vec.y, vec.z);
-
-      house.getHouse().add(mat);
-      doorList.push(mat);
-      draggable.push(mat);
-      dControls.activate();
-      modal.remove();
+      rotateHouseElement(item, "door", doorList);
     }
+    modal.remove();
   });
   drag?.addEventListener("click", () => {
     dControls.activate();
@@ -452,9 +426,15 @@ function modifyWindowAndDoor(item: THREE.Intersection, materials: string[]) {
     dControls.deactivate();
     if (item.object.name == "window") {
       let ob = listWindows.filter((win) => win.id === item.object.id)[0];
+      draggable.splice(draggable.indexOf(ob), 1);
       listWindows.splice(listWindows.indexOf(ob), 1);
+      house.getHouse().remove(ob);
+    } else if (item.object.name == "door") {
+      let ob = doorList.filter((win) => win.id === item.object.id)[0];
+      draggable.splice(draggable.indexOf(ob), 1);
+      doorList.splice(doorList.indexOf(ob), 1);
+      house.getHouse().remove(ob);
     }
-    (item.object as THREE.Mesh).removeFromParent();
     modal.remove();
   });
 
@@ -484,3 +464,32 @@ document.body.addEventListener("keydown", (e) => {
   }
   camera.lookAt(controls.target);
 });
+
+function rotateHouseElement(
+  item: THREE.Intersection,
+  name: string,
+  elementList: THREE.Mesh<THREE.BoxGeometry, THREE.MeshToonMaterial>[]
+) {
+  let ob = elementList.filter((door) => door.id === item.object.id)[0];
+  let g = new THREE.BoxGeometry(
+    ob.geometry.parameters.depth,
+    ob.geometry.parameters.height,
+    ob.geometry.parameters.width
+  );
+
+  let m = ob.material.clone();
+  let vec = ob.position.clone();
+
+  draggable.splice(draggable.indexOf(ob), 1);
+  elementList.splice(elementList.indexOf(ob), 1);
+  house.getHouse().remove(ob);
+
+  let mat = new THREE.Mesh(g, m);
+  mat.name = name;
+  mat.position.set(vec.x, vec.y, vec.z);
+
+  house.getHouse().add(mat);
+  elementList.push(mat);
+  draggable.push(mat);
+  dControls.activate();
+}
