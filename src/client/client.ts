@@ -6,6 +6,12 @@ import { House } from "./House";
 import { WallBorder } from "./WallBorder";
 import { CSG } from "./CSGMesh";
 
+const prev = `
+Click on wall/floor to change textures
+<br />
+Press Arrow up/down to go to first/second floor
+`;
+const scrollMsg = `Scroll inside home to see added element`;
 const scene = new THREE.Scene();
 scene.background = new THREE.TextureLoader().load("models/sky.jpg");
 const camera = new THREE.PerspectiveCamera(
@@ -57,7 +63,7 @@ controls.enablePan = false;
 controls.screenSpacePanning = false;
 let listWindows: THREE.Mesh<THREE.BoxGeometry, THREE.MeshToonMaterial>[] = [];
 let doorList: THREE.Mesh<THREE.BoxGeometry, THREE.MeshToonMaterial>[] = [];
-let count = 0;
+
 function animate() {
   requestAnimationFrame(animate);
   house.walls.forEach((wall, idx) => {
@@ -249,7 +255,10 @@ function modifyFloorAndWall(
           map: new THREE.TextureLoader().load(imgString),
         });
         let door = new THREE.Mesh(g, m);
-
+        let el = document.createElement("div");
+        el.innerHTML = "Go inside home to find added element";
+        document.querySelector(".info")?.appendChild(el);
+        setTimeout(() => el.remove(), 10000);
         door.position.set(
           controls.target.x,
           controls.target.y,
@@ -257,6 +266,7 @@ function modifyFloorAndWall(
         );
 
         draggable.push(door);
+        dControls.activate();
         door.name = "door";
         house.getHouse().add(door);
         doorList.push(door);
@@ -271,10 +281,6 @@ function modifyFloorAndWall(
 
   addWinow?.addEventListener("click", (event) => {
     modal.remove();
-    let el = document.createElement("div");
-    el.innerHTML = "Go inside home to find added element";
-    document.querySelector(".info")?.appendChild(el);
-    setTimeout(() => el.remove(), 5000);
     modal = document.createElement("div");
     modal.classList.add("modal");
     modal.id = "modal";
@@ -315,16 +321,24 @@ function modifyFloorAndWall(
           transparent: true,
           opacity: 0.3,
         });
-        let window = new THREE.Mesh(g, m);
-        window.name = "window";
-        window.position.set(
+        let winElement = new THREE.Mesh(g, m);
+        let text = document.querySelector(".info");
+        if (text != null) {
+          text.innerHTML = scrollMsg;
+          setTimeout(() => {
+            if (text != null) text.innerHTML = prev;
+          }, 5000);
+        }
+        winElement.name = "window";
+        winElement.position.set(
           controls.target.x,
           controls.target.y,
           controls.target.z
         );
-        house.getHouse().add(window);
-        listWindows.push(window);
-        draggable.push(window);
+        house.getHouse().add(winElement);
+        listWindows.push(winElement);
+        draggable.push(winElement);
+        dControls.activate();
         modal.remove();
         windowSelected = undefined;
       }
