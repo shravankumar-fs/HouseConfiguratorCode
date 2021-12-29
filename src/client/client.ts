@@ -26,11 +26,9 @@ light.shadow.mapSize.width = 1024;
 light.shadow.mapSize.height = 1024;
 light.shadow.camera.near = 0.1;
 light.shadow.camera.far = 500;
-scene.add(new THREE.AxesHelper(50));
 let light2 = new THREE.PointLight(0xffffcf, 2, 150);
 light2.position.set(0, 0, 0);
 scene.add(light2);
-// scene.add(new THREE.PointLightHelper(light));
 
 const renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
