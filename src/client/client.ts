@@ -26,7 +26,7 @@ light.shadow.mapSize.width = 1024;
 light.shadow.mapSize.height = 1024;
 light.shadow.camera.near = 0.1;
 light.shadow.camera.far = 500;
-
+scene.add(new THREE.AxesHelper(50));
 let light2 = new THREE.PointLight(0xffffcf, 2, 150);
 light2.position.set(0, 0, 0);
 scene.add(light2);
@@ -58,8 +58,8 @@ controls.dampingFactor = 0.01;
 controls.enablePan = false;
 controls.screenSpacePanning = false;
 let listWindows: THREE.Mesh<THREE.BoxGeometry, THREE.MeshToonMaterial>[] = [];
-
-let c = 0;
+let doorList: THREE.Mesh<THREE.BoxGeometry, THREE.MeshToonMaterial>[] = [];
+let count = 0;
 function animate() {
   requestAnimationFrame(animate);
   house.walls.forEach((wall, idx) => {
@@ -69,7 +69,7 @@ function animate() {
     let changed = false;
     listWindows.forEach((windowElmt) => {
       let wbs = new WallBorder(windowElmt);
-      if (wb.wallContainsObject(wbs)) {
+      if (wb.wallBoundsObject(wbs) != "") {
         const MESH1CSG = CSG.fromGeometry(wall.geometry.clone());
         const MESH2CSG = CSG.fromGeometry(windowElmt.geometry);
         const SUBSCTRACTCSG = MESH1CSG.subtract(MESH2CSG);
@@ -97,6 +97,16 @@ function animate() {
       house.getHouse().remove(SUBFINAL);
       wall.visible = true;
     }
+    doorList.forEach((door) => {
+      let wbs = new WallBorder(door);
+      if (wb.wallBoundsObject(wbs) === "z") {
+        door.position.z = wall.position.z;
+        door.position.y = wb.yMin + door.geometry.parameters.height / 2;
+      } else if (wb.wallBoundsObject(wbs) === "x") {
+        door.position.x = wall.position.x;
+        door.position.y = wb.yMin + door.geometry.parameters.height / 2;
+      }
+    });
   });
 
   controls.update();
@@ -128,9 +138,9 @@ function changeColor(event: THREE.Event) {
 
   if (intersects.length > 0) {
     let item = intersects[0];
-    if (item.object.name == "Floor2" || item.object.name == "Floor1") {
+    if (item.object.name.startsWith("Floor")) {
       modifyFloorAndWall(item, floors);
-    } else if (item.object.name == "wall") {
+    } else if (item.object.name.startsWith("wall")) {
       modifyFloorAndWall(item, walls, true);
     } else if (item.object.name == "door") {
       modifyWindowAndDoor(item, doors);
@@ -241,9 +251,17 @@ function modifyFloorAndWall(
           map: new THREE.TextureLoader().load(imgString),
         });
         let door = new THREE.Mesh(g, m);
+
+        door.position.set(
+          controls.target.x,
+          controls.target.y,
+          controls.target.z
+        );
+
         draggable.push(door);
         door.name = "door";
         house.getHouse().add(door);
+        doorList.push(door);
         modal.remove();
         doorSelected = undefined;
       }
@@ -301,7 +319,11 @@ function modifyFloorAndWall(
         });
         let window = new THREE.Mesh(g, m);
         window.name = "window";
-        window.position.set(0, 0, 0);
+        window.position.set(
+          controls.target.x,
+          controls.target.y,
+          controls.target.z
+        );
         house.getHouse().add(window);
         listWindows.push(window);
         draggable.push(window);
@@ -394,8 +416,31 @@ function modifyWindowAndDoor(item: THREE.Intersection, materials: string[]) {
       listWindows.push(mat);
       draggable.push(mat);
       dControls.activate();
+      modal.remove();
     } else {
-      item.object.rotation.y += Math.PI / 2;
+      let ob = doorList.filter((door) => door.id === item.object.id)[0];
+      let g: THREE.BoxGeometry;
+      if (ob.geometry.parameters.width < ob.geometry.parameters.depth) {
+        g = new THREE.BoxGeometry(30, 40, 2.5);
+      } else {
+        g = new THREE.BoxGeometry(2.5, 40, 30);
+      }
+      let m = ob.material.clone();
+      let vec = ob.position.clone();
+
+      draggable.splice(doorList.indexOf(ob), 1);
+      doorList.splice(doorList.indexOf(ob), 1);
+      house.getHouse().remove(ob);
+
+      let mat = new THREE.Mesh(g, m);
+      mat.name = "door";
+      mat.position.set(vec.x, vec.y, vec.z);
+
+      house.getHouse().add(mat);
+      doorList.push(mat);
+      draggable.push(mat);
+      dControls.activate();
+      modal.remove();
     }
   });
   drag?.addEventListener("click", () => {
