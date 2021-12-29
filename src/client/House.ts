@@ -172,10 +172,18 @@ export class House {
     this.house.add(roof);
   }
   initWalls() {
-    this.house.add(this.getWallItem(new THREE.Vector3(-75, 0, 0), 1, 60, 150));
-    this.house.add(this.getWallItem(new THREE.Vector3(75, 0, 0), 1, 60, 150));
-    this.house.add(this.getWallItem(new THREE.Vector3(0, 0, -75), 150, 60, 1));
-    this.house.add(this.getWallItem(new THREE.Vector3(0, 0, 75), 150, 60, 1));
+    this.house.add(
+      this.getWallItem(new THREE.Vector3(-75, 0, 0), 1, 60, 150, "wallLeft")
+    );
+    this.house.add(
+      this.getWallItem(new THREE.Vector3(75, 0, 0), 1, 60, 150, "wallRight")
+    );
+    this.house.add(
+      this.getWallItem(new THREE.Vector3(0, 0, -75), 150, 60, 1, "wallBack")
+    );
+    this.house.add(
+      this.getWallItem(new THREE.Vector3(0, 0, 75), 150, 60, 1, "wallFront")
+    );
 
     this.house.add(this.getWallItem(new THREE.Vector3(-75, 60, 0), 1, 60, 150));
     this.house.add(this.getWallItem(new THREE.Vector3(75, 60, 0), 1, 60, 150));
@@ -234,7 +242,8 @@ export class House {
     pos: THREE.Vector3,
     width: number,
     height: number,
-    depth: number
+    depth: number,
+    name?: string
   ) {
     let texture = new TextureLoader().load("models/wall1.jpg");
     // texture.wrapS = THREE.RepeatWrapping
@@ -250,6 +259,9 @@ export class House {
     let geo = new THREE.BoxGeometry(width, height, depth);
     let wall = new THREE.Mesh(geo, mat);
     wall.name = "wall";
+    if (name) {
+      wall.name = name;
+    }
     wall.position.set(pos.x, pos.y, pos.z);
     wall.castShadow = true;
     wall.receiveShadow = true;

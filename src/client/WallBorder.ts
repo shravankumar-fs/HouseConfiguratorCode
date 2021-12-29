@@ -51,4 +51,32 @@ export class WallBorder {
     }
     return false;
   }
+
+  public wallBoundsObject(another: WallBorder): string {
+    let w1 = another.xMax - another.xMin;
+    let d1 = another.zMax - another.zMin;
+
+    let left =
+      another.xMin > this.xMin &&
+      another.xMax < this.xMax &&
+      another.yMin > this.yMin - 10 &&
+      another.yMax < this.yMax + 10 &&
+      another.zMin > this.zMin - 50 &&
+      another.zMax < this.zMax + 50;
+    let right =
+      another.xMin > this.xMin - 50 &&
+      another.xMax < this.xMax + 50 &&
+      another.yMin > this.yMin - 10 &&
+      another.yMax < this.yMax + 10 &&
+      another.zMin > this.zMin &&
+      another.zMax < this.zMax;
+
+    if (w1 > d1 && left) {
+      return "z";
+    }
+    if (w1 < d1 && right) {
+      return "x";
+    }
+    return "";
+  }
 }
