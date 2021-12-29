@@ -4,7 +4,7 @@ body {
   height: 100vh;
   width: 100vw;
   overflow: hidden;
-  background: url("./favicon.ico") center/cover repeat;
+  background: hsl(240, 64%, 10%);
   position: relative;
 }
 
