@@ -255,10 +255,13 @@ function modifyFloorAndWall(
           map: new THREE.TextureLoader().load(imgString),
         });
         let door = new THREE.Mesh(g, m);
-        let el = document.createElement("div");
-        el.innerHTML = "Go inside home to find added element";
-        document.querySelector(".info")?.appendChild(el);
-        setTimeout(() => el.remove(), 10000);
+        let text = document.querySelector(".info");
+        if (text != null) {
+          text.innerHTML = scrollMsg;
+          setTimeout(() => {
+            if (text != null) text.innerHTML = prev;
+          }, 5000);
+        }
         door.position.set(
           controls.target.x,
           controls.target.y,
